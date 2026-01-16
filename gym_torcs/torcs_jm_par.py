@@ -491,7 +491,7 @@ if __name__ == "__main__":
 import math
 
 # ================= USER CONFIGURABLE PARAMETERS =================
-TARGET_SPEED = 200  # Target speed in km/h. Increasing this makes the car go faster but may reduce stability.
+TARGET_SPEED = 100  # Target speed in km/h. Increasing this makes the car go faster but may reduce stability.
 STEER_GAIN = 50     # Steering sensitivity. Higher values make the car turn more aggressively.
 CENTERING_GAIN = 0.60  # How strongly the car corrects its position toward the center of the track.
 BRAKE_THRESHOLD = 0.5  # Angle threshold for braking. Lower values brake earlier.
