@@ -1,0 +1,12 @@
+# TORCS CMA-ES Trainer Requirements
+# Install with: pip install -r requirements.txt
+
+# Core ML
+torch>=1.9.0
+numpy>=1.19.0
+
+# Optimization
+cma>=3.0.0
+
+# Standard library (included in Python)
+# socket, json, time, traceback, dataclasses
