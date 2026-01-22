@@ -805,8 +805,8 @@ def evaluate(client: TORCSClient, driver: HybridDriver,
     
     # Fitness components
     distance_score = distance * 1.0
-    speed_score = avg_speed * 0.5 + max_speed * 0.2 + avg_corner_speed * 0.3
-    lap_score = laps_completed * 2000
+    speed_score = avg_speed * 1 + max_speed * 0.5 + avg_corner_speed * 0.5
+    lap_score = laps_completed * 200
     
     clean_bonus = 300 if total_damage == 0 else (200 if total_damage < 100 else (100 if total_damage < 500 else 0))
     smooth_bonus = 100 if wobble < 0.1 else (50 if wobble < 0.2 else 0)
