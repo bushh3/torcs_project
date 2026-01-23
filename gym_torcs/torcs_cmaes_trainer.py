@@ -803,21 +803,37 @@ def evaluate(client: TORCSClient, driver: HybridDriver,
     total_pos_steps = on_track_steps + off_track_steps + severe_off_steps
     on_track_pct = on_track_steps / total_pos_steps if total_pos_steps > 0 else 0
     
-    # Fitness components
-    distance_score = distance * 1.0
-    speed_score = avg_speed * 1 + max_speed * 0.5 + avg_corner_speed * 0.5
-    lap_score = laps_completed * 200
+    # Fitness components - SPEED FOCUSED (v2)
+    # Reduced distance weight, massively increased speed weight
+    distance_score = distance * 0.5
     
-    clean_bonus = 300 if total_damage == 0 else (200 if total_damage < 100 else (100 if total_damage < 500 else 0))
-    smooth_bonus = 100 if wobble < 0.1 else (50 if wobble < 0.2 else 0)
+    # Heavy speed weighting to escape "safe but slow" local optimum
+    speed_score = avg_speed * 4.0 + max_speed * 2.0 + avg_corner_speed * 3.0
     
-    off_track_penalty = off_track_steps * 0.3 + severe_off_steps * 2.0
+    # Lap bonus 
+    lap_score = laps_completed * 500
+    
+    # CRITICAL: Penalty for being too slow - this forces exploration of faster strategies
+    slow_penalty = 0
+    if avg_speed < 70:
+        slow_penalty = (70 - avg_speed) * 15  # Strong penalty for < 70 km/h
+    elif avg_speed < 90:
+        slow_penalty = (90 - avg_speed) * 5   # Medium penalty for < 90 km/h
+    elif avg_speed < 100:
+        slow_penalty = (100 - avg_speed) * 2  # Mild penalty for < 100 km/h
+    
+    # Reduced safety bonuses (we want speed, not just survival)
+    clean_bonus = 100 if total_damage == 0 else 50
+    smooth_bonus = 50 if wobble < 0.15 else 0
+    
+    # Reduced penalties to allow more risk-taking
+    off_track_penalty = off_track_steps * 0.15 + severe_off_steps * 1.0
     damage_penalty = total_damage * 0.1
-    wobble_penalty = wobble * 50
+    wobble_penalty = wobble * 20
     
     fitness = (distance_score + speed_score + lap_score + 
                clean_bonus + smooth_bonus - 
-               off_track_penalty - damage_penalty - wobble_penalty)
+               off_track_penalty - damage_penalty - wobble_penalty - slow_penalty)
     
     return {
         'fitness': fitness,
@@ -840,12 +856,17 @@ def evaluate(client: TORCSClient, driver: HybridDriver,
 def train(host: str = 'localhost', port: int = 3001,
           max_generations: int = 100, checkpoint: str = None,
           save_dir: str = "./checkpoints", popsize: int = 20,
-          track_length: float = 3600, use_restart: bool = True):
+          track_length: float = 3600, use_restart: bool = True,
+          sigma: float = 0.5):
     """
     Main CMA-ES training loop.
     
     use_restart: If True, restart race between evaluations (requires working meta=1).
                  If False, run continuous without restarts.
+    sigma: Initial step size for CMA-ES. Higher = more exploration.
+           - 0.3 = default, conservative
+           - 0.5 = moderate exploration (recommended for escaping local optima)
+           - 0.8 = aggressive exploration
     """
     os.makedirs(save_dir, exist_ok=True)
     
@@ -862,7 +883,7 @@ def train(host: str = 'localhost', port: int = 3001,
     x0 = driver.get_all_params()
     
     print("\n" + "=" * 70)
-    print("TORCS CMA-ES Racing Driver Trainer")
+    print("TORCS CMA-ES Racing Driver Trainer (SPEED FOCUSED v2)")
     print("=" * 70)
     print("\nSetup:")
     print("1. Start TORCS")
@@ -874,6 +895,7 @@ def train(host: str = 'localhost', port: int = 3001,
     print(f"Server: {host}:{port}")
     print(f"Track length: {track_length}m")
     print(f"Restart mode: {'ON' if use_restart else 'OFF (continuous)'}")
+    print(f"Sigma (exploration): {sigma}")
     print("=" * 70)
     input("\nPress Enter to start training...")
     
@@ -893,8 +915,8 @@ def train(host: str = 'localhost', port: int = 3001,
         client.respond_to_server()
         time.sleep(0.1)
     
-    # CMA-ES setup
-    es = cma.CMAEvolutionStrategy(x0, 0.3, {
+    # CMA-ES setup with configurable sigma
+    es = cma.CMAEvolutionStrategy(x0, sigma, {
         'popsize': popsize,
         'maxfevals': max_generations * popsize,
         'verb_disp': 0,
@@ -1100,7 +1122,7 @@ def race(checkpoint: str, host: str = 'localhost', port: int = 3001):
 if __name__ == "__main__":
     import argparse
     
-    parser = argparse.ArgumentParser(description="TORCS CMA-ES Trainer")
+    parser = argparse.ArgumentParser(description="TORCS CMA-ES Trainer (Speed Focused v2)")
     parser.add_argument('--mode', choices=['train', 'race'], default='train')
     parser.add_argument('--host', default='localhost')
     parser.add_argument('--port', type=int, default=3001)
@@ -1109,6 +1131,8 @@ if __name__ == "__main__":
     parser.add_argument('--save_dir', default='./checkpoints')
     parser.add_argument('--popsize', type=int, default=20)
     parser.add_argument('--track_length', type=float, default=3600)
+    parser.add_argument('--sigma', type=float, default=0.5,
+                        help='CMA-ES exploration (0.3=conservative, 0.5=moderate, 0.8=aggressive)')
     parser.add_argument('--no_restart', action='store_true',
                         help='Disable restart between evaluations (continuous mode)')
     
@@ -1123,7 +1147,8 @@ if __name__ == "__main__":
             save_dir=args.save_dir,
             popsize=args.popsize,
             track_length=args.track_length,
-            use_restart=not args.no_restart
+            use_restart=not args.no_restart,
+            sigma=args.sigma
         )
     else:
         if not args.checkpoint:
