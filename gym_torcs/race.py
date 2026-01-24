@@ -5,6 +5,7 @@ import sys
 
 try:
     import pyautogui
+    pyautogui.FAILSAFE = False
 except ImportError:
     print("CRITICAL: You need pyautogui installed.")
     print("Run: pip3 install pyautogui")
@@ -20,6 +21,9 @@ WINE_CMD = "wine"
 # Hardcoded based on your specific screen setup
 CLICK_X = 330
 CLICK_Y = 1532
+RESTART_X = 260
+RESTART_Y = 490
+
 
 def kill_zombies():
     print("--- Cleaning up old Wine processes ---")
@@ -28,56 +32,95 @@ def kill_zombies():
     subprocess.run(["killall", "-9", "wtorcs.exe"], stderr=subprocess.DEVNULL)
     time.sleep(1)
 
+
 def start_torcs():
-    print(f"--- Launching TORCS ---")
+    print("--- Launching TORCS ---")
     try:
         subprocess.Popen(
-            [WINE_CMD, "wtorcs.exe"], 
+            [WINE_CMD, "wtorcs.exe"],
             cwd=TORCS_DIR,
-            stdout=subprocess.DEVNULL, 
+            stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         )
     except FileNotFoundError:
         print("Error: 'wine' command not found.")
         sys.exit(1)
 
+
 def brute_force_menus():
     print("--- Waiting 12 seconds for TORCS to load ---")
     time.sleep(12)
-    
+
     print("--- AUTOMATION STARTING ---")
-    print(f"Clicking specific coordinates: ({CLICK_X}, {CLICK_Y})")
-    
-    # 1. FORCE FOCUS CLICK (Using your coordinates)
+    print(f"Clicking focus coordinates: ({CLICK_X}, {CLICK_Y})")
+
+    # Force focus
     pyautogui.click(CLICK_X, CLICK_Y)
     time.sleep(0.5)
-    
-    # 2. PRESS ENTER REPEATEDLY
-    # Pressing 5 times ensures we get through Race -> Quick Race -> New Race -> Start
-    keys = ['enter', 'enter', 'enter', 'enter', 'enter']
-    
-    for k in keys:
-        print(f"Pressing {k}...")
-        pyautogui.press(k)
-        time.sleep(1.5) # Wait for menu animation
-        
+
+    # Navigate menus
+    for _ in range(5):
+        pyautogui.press("enter")
+        time.sleep(1.5)
+
     print("--- Menu Navigation Complete ---")
     print("--- Waiting 10 seconds for track to load ---")
     time.sleep(10)
 
+
 def start_python_client():
-    print(f"--- Launching Python Client ---")
+    print("--- Launching Python Client ---")
     try:
-        subprocess.Popen(
+        proc = subprocess.Popen(
             ["python3", PYTHON_CLIENT_SCRIPT],
             cwd=GYM_TORCS_DIR
         )
         print("--- Client Connected ---")
+        return proc
     except Exception as e:
         print(f"Error starting python client: {e}")
+        return None
+
+
+def auto_restart_race(client_process):
+    print("--- Waiting for Python client shutdown ---")
+    client_process.wait()
+
+    print("--- Client shutdown detected ---")
+    print("--- Restarting race sequence ---")
+    time.sleep(2)
+
+    # Step 1: press Enter (TORCS menu already focused)
+    print("Pressing ENTER to confirm restart")
+    pyautogui.press("enter")
+    time.sleep(1)
+
+    # Step 2: click start race button once
+    print(f"Clicking race start button at ({CLICK_X}, {CLICK_Y})")
+    pyautogui.moveTo(CLICK_X, CLICK_Y, duration=0.3)
+    pyautogui.click()
+    pyautogui.press("enter")
+    
+    print("--- Launching Python Client ---")
+    try:
+        proc = subprocess.Popen(
+            ["python3", PYTHON_CLIENT_SCRIPT],
+            cwd=GYM_TORCS_DIR
+        )
+        print("--- Client Connected ---")
+        return proc
+    except Exception as e:
+        print(f"Error starting python client: {e}")
+        return None
+
+    print("--- Race restart sequence complete ---")
+
 
 if __name__ == "__main__":
     kill_zombies()
     start_torcs()
     brute_force_menus()
-    start_python_client()
+
+    client_proc = start_python_client()
+    if client_proc is not None:
+        auto_restart_race(client_proc)

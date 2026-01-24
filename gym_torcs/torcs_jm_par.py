@@ -474,13 +474,13 @@ def drive_example(c):
         R['gear']=6
     return
 
-if __name__ == "__main__":
-    C= Client(p=3001)
-    for step in range(C.maxSteps,0,-1):
-        C.get_servers_input()
-        drive_example(C)
-        C.respond_to_server()
-    C.shutdown()
+#if __name__ == "__main__":
+#    C= Client(p=3001)
+#    for step in range(C.maxSteps,0,-1):
+#        C.get_servers_input()
+#        drive_example(C)
+#        C.respond_to_server()
+#    C.shutdown()
 
 
 
@@ -491,10 +491,10 @@ if __name__ == "__main__":
 import math
 
 # ================= USER CONFIGURABLE PARAMETERS =================
-TARGET_SPEED = 150  # Target speed in km/h. Increasing this makes the car go faster but may reduce stability.
+TARGET_SPEED = 100  # Target speed in km/h. Increasing this makes the car go faster but may reduce stability.
 STEER_GAIN = 50     # Steering sensitivity. Higher values make the car turn more aggressively.
 CENTERING_GAIN = 0.60  # How strongly the car corrects its position toward the center of the track.
-BRAKE_THRESHOLD = 0.5  # Angle threshold for braking. Lower values brake earlier.
+BRAKE_THRESHOLD = 0.2  # Angle threshold for braking. Lower values brake earlier.
 GEAR_SPEEDS = [0, 50, 80, 120, 150, 200]  # Speed thresholds for gear shifting.
 ENABLE_TRACTION_CONTROL = True  # Toggle traction control system.
 
@@ -513,7 +513,7 @@ def calculate_throttle(S, R):
     return max(0.0, min(1.0, accel))
 
 def apply_brakes(S):
-    return 0.3 if abs(S['angle']) > BRAKE_THRESHOLD else 0.0
+    return 0.4 if abs(S['angle']) > BRAKE_THRESHOLD else 0.0
 
 def shift_gears(S):
     gear = 1
