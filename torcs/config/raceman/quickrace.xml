@@ -52,16 +52,6 @@
       <attstr name="module" val="scr_server"/>
     </section>
 
-    <section name="2">
-      <attnum name="idx" val="6"/>
-      <attstr name="module" val="berniw3"/>
-    </section>
-
-    <section name="3">
-      <attnum name="idx" val="7"/>
-      <attstr name="module" val="inferno2"/>
-    </section>
-
   </section>
 
   <section name="Configuration">

@@ -5,7 +5,6 @@ import sys
 
 try:
     import pyautogui
-    pyautogui.FAILSAFE = False
 except ImportError:
     print("CRITICAL: You need pyautogui installed.")
     print("Run: pip3 install pyautogui")
@@ -90,28 +89,16 @@ def auto_restart_race(client_process):
     print("--- Restarting race sequence ---")
     time.sleep(2)
 
-    # Step 1: press Enter (TORCS menu already focused)
-    print("Pressing ENTER to confirm restart")
-    pyautogui.press("enter")
+    # Step 1: restart button
+    print(f"Clicking restart button at ({RESTART_X}, {RESTART_Y})")
+    pyautogui.click(RESTART_X, RESTART_Y)
     time.sleep(1)
 
-    # Step 2: click start race button once
-    print(f"Clicking race start button at ({CLICK_X}, {CLICK_Y})")
-    pyautogui.moveTo(CLICK_X, CLICK_Y, duration=0.3)
-    pyautogui.click()
-    pyautogui.press("enter")
-    
-    print("--- Launching Python Client ---")
-    try:
-        proc = subprocess.Popen(
-            ["python3", PYTHON_CLIENT_SCRIPT],
-            cwd=GYM_TORCS_DIR
-        )
-        print("--- Client Connected ---")
-        return proc
-    except Exception as e:
-        print(f"Error starting python client: {e}")
-        return None
+    # Step 2–4: click race start button three times
+    for i in range(3):
+        print(f"Clicking race button {i + 1}/3 at ({CLICK_X}, {CLICK_Y})")
+        pyautogui.click(CLICK_X, CLICK_Y)
+        time.sleep(1.5)
 
     print("--- Race restart sequence complete ---")
 
