@@ -20,7 +20,7 @@ ROBOT = scr_server
 
 SHIPDIR   = drivers/${ROBOT}/0
 
-SHIP      = car1-trb1.rgb $(shell find *.xml -maxdepth 0 -type f -print)
+SHIP      = car1-ow1.rgb $(shell find *.xml -maxdepth 0 -type f -print)
 
 src-robots-scr_server_PKGFILES	= $(shell find * -maxdepth 0 -type f -print)
 

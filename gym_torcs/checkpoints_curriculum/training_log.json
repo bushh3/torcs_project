@@ -1,0 +1,35 @@
+[
+  {
+    "generation": 209,
+    "network_weight": 1.0,
+    "best_fitness": 22495.487330870976,
+    "mean_fitness": 11737.78748631273,
+    "sigma": 0.005,
+    "avg_speed": 128.1894517275585,
+    "max_speed": 140.3209447273318,
+    "avg_distance": 4203.785217391304,
+    "buffer_size": 127888
+  },
+  {
+    "generation": 210,
+    "network_weight": 1.0,
+    "best_fitness": 22495.487330870976,
+    "mean_fitness": 13365.738988966039,
+    "sigma": 0.0051,
+    "avg_speed": 134.69793339629175,
+    "max_speed": 141.48189244053046,
+    "avg_distance": 4765.869130434783,
+    "buffer_size": 272185
+  },
+  {
+    "generation": 211,
+    "network_weight": 1.0,
+    "best_fitness": 22495.487330870976,
+    "mean_fitness": 13208.550273944702,
+    "sigma": 0.004998,
+    "avg_speed": 134.07179005195022,
+    "max_speed": 142.66799678899082,
+    "avg_distance": 4724.066521739131,
+    "buffer_size": 416022
+  }
+]
